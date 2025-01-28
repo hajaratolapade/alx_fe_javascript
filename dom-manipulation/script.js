@@ -100,3 +100,24 @@ let quotes = [
   loadQuotes();
   populateCategories();
   showRandomQuote();
+
+  // Function to fetch quotes from the server
+async function fetchQuotesFromServer() {
+  const response = await fetch('https://jsonplaceholder.typicode.com/posts'); // Replace with your server URL
+  const serverQuotes = await response.json();
+  quotes.push(...serverQuotes.map(post => ({ text: post.title, category: 'Server' })));
+  saveQuotes();
+  populateCategories();
+}
+
+// Function to periodically sync data with the server
+function startDataSync() {
+  setInterval(fetchQuotesFromServer, 60000); // Sync every 60 seconds
+}
+
+// Initialize the application with server sync
+document.getElementById('newQuote').addEventListener('click', showRandomQuote);
+loadQuotes();
+populateCategories();
+showRandomQuote();
+startDataSync();
