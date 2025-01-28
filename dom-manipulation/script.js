@@ -159,7 +159,7 @@ async function syncQuotes() {
     quotes = newQuotes;
     saveQuotes();
     populateCategories();
-    notifyUser('Quotes synced with the server successfully!');
+    notifyUser('Quotes synced with server!');
   } catch (error) {
     console.error('Error syncing quotes with server:', error);
     notifyUser('Error syncing quotes with the server.');
