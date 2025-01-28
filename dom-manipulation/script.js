@@ -110,6 +110,33 @@ async function fetchQuotesFromServer() {
   populateCategories();
 }
 
+// Function to add a new quote
+function addQuote() {
+  const newQuoteText = document.getElementById('newQuoteText').value;
+  const newQuoteCategory = document.getElementById('newQuoteCategory').value;
+  
+  // Ensure both fields are filled
+  if (newQuoteText && newQuoteCategory) {
+    // Add the new quote to the quotes array
+    quotes.push({ text: newQuoteText, category: newQuoteCategory });
+    
+    // Save the updated quotes array to local storage
+    saveQuotes();
+    
+    // Update the categories dropdown
+    populateCategories();
+    
+    // Notify the user
+    alert('Quote added successfully!');
+    
+    // Clear the input fields
+    document.getElementById('newQuoteText').value = '';
+    document.getElementById('newQuoteCategory').value = '';
+  } else {
+    alert('Please enter both a quote and a category.');
+  }
+}
+
 // Function to periodically sync data with the server
 function startDataSync() {
   setInterval(fetchQuotesFromServer, 60000); // Sync every 60 seconds
