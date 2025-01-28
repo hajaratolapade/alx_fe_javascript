@@ -18,8 +18,10 @@ function addQuote() {
   
   // Ensure both fields are filled
   if (newQuoteText && newQuoteCategory) {
+    const newQuote = { text: newQuoteText, category: newQuoteCategory };
+    
     // Add the new quote to the quotes array
-    quotes.push({ text: newQuoteText, category: newQuoteCategory });
+    quotes.push(newQuote);
     
     // Save the updated quotes array to local storage
     saveQuotes();
@@ -29,6 +31,9 @@ function addQuote() {
 
     // Update the quote display to show the new quote
     showRandomQuote();
+    
+    // Post the new quote to the server
+    postQuoteToServer(newQuote);
     
     // Notify the user
     alert('Quote added successfully!');
@@ -110,6 +115,75 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
+// Function to fetch quotes from the server
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+    const serverQuotes = await response.json();
+    const newQuotes = serverQuotes.map(post => ({ text: post.title, category: 'Server' }));
+    quotes.push(...newQuotes);
+    saveQuotes();
+    populateCategories();
+    notifyUser('Quotes fetched from server successfully!');
+  } catch (error) {
+    console.error('Error fetching quotes from server:', error);
+    notifyUser('Error fetching quotes from server.');
+  }
+}
+
+// Function to post a new quote to the server
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(quote),
+    });
+    const result = await response.json();
+    console.log('Quote posted to the server:', result);
+  } catch (error) {
+    console.error('Error posting quote to server:', error);
+  }
+}
+
+// Function to sync quotes with the server
+async function syncQuotes() {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+    const serverQuotes = await response.json();
+    const newQuotes = serverQuotes.map(post => ({ text: post.title, category: 'Server' }));
+
+    // Conflict resolution: server data takes precedence
+    quotes = newQuotes;
+    saveQuotes();
+    populateCategories();
+    notifyUser('Quotes synced with the server successfully!');
+  } catch (error) {
+    console.error('Error syncing quotes with server:', error);
+    notifyUser('Error syncing quotes with the server.');
+  }
+}
+
+// Start periodic sync with the server
+function startDataSync() {
+  setInterval(syncQuotes, 60000); // Sync every 60 seconds
+}
+
+// Function to notify users of updates or conflicts
+function notifyUser(message) {
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  // Remove notification after 5 seconds
+  setTimeout(() => {
+    notification.remove();
+  }, 5000);
+}
+
 // Function to create the form for adding new quotes
 function createAddQuoteForm() {
   // Create a container for the form
@@ -146,4 +220,22 @@ window.onload = function() {
   populateCategories();
   showRandomQuote();
   document.getElementById('newQuote').addEventListener('click', showRandomQuote);
+  startDataSync();
 };
+
+// Add necessary CSS for notifications
+const style = document.createElement('style');
+style.textContent = `
+  .notification {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+  }
+`;
+document.head.appendChild(style);
